@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Current Medications & Supplements</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f8f7f5;
+    color: #2c2c2c;
+    padding: 20px;
+    line-height: 1.55;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 16px;
+  }
+  .lang-toggle {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 16px;
+  }
+  .lang-btn {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid #ddd;
+    background: #f0eeeb;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .lang-btn:first-child { border-radius: 8px 0 0 8px; }
+  .lang-btn:last-child { border-radius: 0 8px 8px 0; }
+  .lang-btn.active {
+    background: #2c2c2c;
+    color: #fff;
+    border-color: #2c2c2c;
+  }
+  .section {
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #b06a30;
+    margin-bottom: 8px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 0;
+    margin-bottom: 12px;
+    border: 1px solid #e8e5e0;
+    overflow: hidden;
+  }
+  .med-row {
+    display: flex;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0eeeb;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .med-row:last-child { border-bottom: none; }
+  .med-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    min-width: 0;
+    flex-shrink: 0;
+  }
+  .med-detail {
+    font-size: 0.82rem;
+    color: #666;
+    flex: 1;
+  }
+  .med-time {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .t-am { background: #d4882a; }
+  .t-mid { background: #5a8f5a; }
+  .t-pm { background: #6a6a9a; }
+  .t-daily { background: #777; }
+  .note {
+    background: #fdf6ee;
+    border-left: 3px solid #d4882a;
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.82rem;
+    color: #555;
+    margin-bottom: 12px;
+  }
+  .legend {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    color: #666;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .lang-en, .lang-es { display: none; }
+  .lang-en.visible, .lang-es.visible { display: block; }
+  .updated {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+  }
+</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a0f0a">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(console.error);
+    });
+  }
+</script>
+</head>
+<body>
+
+<h1 class="lang-en visible">Current Medications & Supplements</h1>
+<h1 class="lang-es">Medicamentos y Suplementos Actuales</h1>
+<div class="subtitle lang-en visible">Complete list for provider reference</div>
+<div class="subtitle lang-es">Lista completa para referencia médica</div>
+
+<div class="lang-toggle">
+  <div class="lang-btn active" onclick="switchLang('en')">English</div>
+  <div class="lang-btn" onclick="switchLang('es')">Español</div>
+</div>
+
+<!-- ==================== ENGLISH ==================== -->
+<div class="lang-en visible">
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot t-am"></div> Morning (fasted)</div>
+  <div class="legend-item"><div class="legend-dot t-mid"></div> Midday (with food)</div>
+  <div class="legend-item"><div class="legend-dot t-pm"></div> Evening</div>
+  <div class="legend-item"><div class="legend-dot t-daily"></div> Daily / variable</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Thyroid</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Levothyroxine</div>
+      <div class="med-detail">Rx — first thing, water only</div>
+      <div class="med-time t-am">AM</div>
+    </div>
+  </div>
+  <div class="note">Autoimmune thyroiditis (elevated TPO antibodies). ~6–8 weeks into treatment. Anchor of morning timing sequence — all other AM items follow after 15+ min.</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Cardiovascular</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Losartan</div>
+      <div class="med-detail">Rx — ARB, blood pressure</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Atorvastatin</div>
+      <div class="med-detail">Rx — statin, cholesterol</div>
+      <div class="med-time t-pm">PM</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Omega-3 w/ Turmeric</div>
+      <div class="med-detail">Supplement — anti-inflammatory</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Taurine</div>
+      <div class="med-detail">Supplement — cardiovascular support</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">GI / Reflux / Histamine</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Omeprazole</div>
+      <div class="med-detail">OTC 20mg — PPI, 30 min before dinner</div>
+      <div class="med-time t-pm">PM</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Famotidine</div>
+      <div class="med-detail">OTC 20mg — H2 blocker, bedtime</div>
+      <div class="med-time t-pm">PM</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Cetirizine</div>
+      <div class="med-detail">OTC 10mg — H1 antihistamine, daily</div>
+      <div class="med-time t-daily">DAILY</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">DAO Enzyme</div>
+      <div class="med-detail">Supplement — with meals</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Gaviscon</div>
+      <div class="med-detail">OTC — as needed for reflux</div>
+      <div class="med-time t-daily">PRN</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Weight Management</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Tesofensine</div>
+      <div class="med-detail">Compounded — appetite/satiety</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+  </div>
+  <div class="note">Oral semaglutide (Rybelsus) recently discontinued — esophageal irritation, no efficacy. Planning to trial tirzepatide (Mounjaro) 2.5mg next.</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Reproductive / Vascular</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Tadalafil</div>
+      <div class="med-detail">Rx — daily low-dose</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Hair</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Dutasteride</div>
+      <div class="med-detail">Rx — 5-alpha reductase inhibitor</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Oral Minoxidil</div>
+      <div class="med-detail">2.5mg — vasodilator for hair</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+  </div>
+  <div class="note">Also receiving PRP / microneedling. History of hair transplants.</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Neuroprotective / Cellular</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Citicoline</div>
+      <div class="med-detail">Supplement — cognitive support</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">NAC</div>
+      <div class="med-detail">Supplement — antioxidant / glutathione precursor</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">NMN (Liposomal)</div>
+      <div class="med-detail">350–500mg (Renue By Science) — NAD+ precursor</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Vitamins & Minerals</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Vitamin D3 + K2</div>
+      <div class="med-detail">Supplement</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Methyl B12 / Folate / P5P</div>
+      <div class="med-detail">Supplement — methylation support</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Vitamin C</div>
+      <div class="med-detail">Supplement</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Selenium</div>
+      <div class="med-detail">Supplement — thyroid cofactor</div>
+      <div class="med-time t-mid">MID</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Magnesium</div>
+      <div class="med-detail">Supplement — optional evening</div>
+      <div class="med-time t-pm">PM</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Occasional / IV (Panama clinic)</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">IV Vitamin C</div>
+      <div class="med-detail">Occasional standalone sessions</div>
+      <div class="med-time t-daily">OCC</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">IV Glutathione</div>
+      <div class="med-detail">Occasional standalone sessions</div>
+      <div class="med-time t-daily">OCC</div>
+    </div>
+  </div>
+</div>
+
+<div class="updated">Last updated: April 2026</div>
+
+</div>
+
+<!-- ==================== ESPAÑOL ==================== -->
+<div class="lang-es">
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot t-am"></div> Mañana (en ayunas)</div>
+  <div class="legend-item"><div class="legend-dot t-mid"></div> Mediodía (con comida)</div>
+  <div class="legend-item"><div class="legend-dot t-pm"></div> Noche</div>
+  <div class="legend-item"><div class="legend-dot t-daily"></div> Diario / variable</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Tiroides</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Levotiroxina</div>
+      <div class="med-detail">Rx — primera cosa, solo con agua</div>
+      <div class="med-time t-am">AM</div>
+    </div>
+  </div>
+  <div class="note">Tiroiditis autoinmune (anticuerpos TPO elevados). ~6–8 semanas de tratamiento. Ancla de la secuencia matutina — todos los demás elementos de la mañana siguen después de 15+ min.</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Cardiovascular</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Losartán</div>
+      <div class="med-detail">Rx — ARA II, presión arterial</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Atorvastatina</div>
+      <div class="med-detail">Rx — estatina, colesterol</div>
+      <div class="med-time t-pm">PM</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Omega-3 c/ Cúrcuma</div>
+      <div class="med-detail">Suplemento — antiinflamatorio</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Taurina</div>
+      <div class="med-detail">Suplemento — soporte cardiovascular</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">GI / Reflujo / Histamina</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Omeprazol</div>
+      <div class="med-detail">OTC 20mg — IBP, 30 min antes de cenar</div>
+      <div class="med-time t-pm">PM</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Famotidina</div>
+      <div class="med-detail">OTC 20mg — bloqueador H2, al acostarse</div>
+      <div class="med-time t-pm">PM</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Cetirizina</div>
+      <div class="med-detail">OTC 10mg — antihistamínico H1, diario</div>
+      <div class="med-time t-daily">DIARIO</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Enzima DAO</div>
+      <div class="med-detail">Suplemento — con las comidas</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Gaviscon</div>
+      <div class="med-detail">OTC — según necesidad para reflujo</div>
+      <div class="med-time t-daily">SOS</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Control de Peso</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Tesofensina</div>
+      <div class="med-detail">Compuesto — apetito/saciedad</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+  </div>
+  <div class="note">Semaglutida oral (Rybelsus) suspendida recientemente — irritación esofágica, sin eficacia. Plan de probar tirzepatida (Mounjaro) 2.5mg próximamente.</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Reproductivo / Vascular</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Tadalafilo</div>
+      <div class="med-detail">Rx — dosis baja diaria</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Cabello</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Dutasterida</div>
+      <div class="med-detail">Rx — inhibidor de 5-alfa reductasa</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Minoxidil Oral</div>
+      <div class="med-detail">2.5mg — vasodilatador para cabello</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+  </div>
+  <div class="note">También recibe PRP / microagujas. Antecedente de trasplantes capilares.</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Neuroprotector / Celular</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Citicolina</div>
+      <div class="med-detail">Suplemento — soporte cognitivo</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">NAC</div>
+      <div class="med-detail">Suplemento — antioxidante / precursor de glutatión</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">NMN (Liposomal)</div>
+      <div class="med-detail">350–500mg (Renue By Science) — precursor de NAD+</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Vitaminas y Minerales</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Vitamina D3 + K2</div>
+      <div class="med-detail">Suplemento</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Metil B12 / Folato / P5P</div>
+      <div class="med-detail">Suplemento — soporte de metilación</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Vitamina C</div>
+      <div class="med-detail">Suplemento</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Selenio</div>
+      <div class="med-detail">Suplemento — cofactor tiroideo</div>
+      <div class="med-time t-mid">MED</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Magnesio</div>
+      <div class="med-detail">Suplemento — opcional por la noche</div>
+      <div class="med-time t-pm">PM</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Ocasional / IV (Clínica en Panamá)</div>
+  <div class="card">
+    <div class="med-row">
+      <div class="med-name">Vitamina C IV</div>
+      <div class="med-detail">Sesiones ocasionales independientes</div>
+      <div class="med-time t-daily">OCA</div>
+    </div>
+    <div class="med-row">
+      <div class="med-name">Glutatión IV</div>
+      <div class="med-detail">Sesiones ocasionales independientes</div>
+      <div class="med-time t-daily">OCA</div>
+    </div>
+  </div>
+</div>
+
+<div class="updated">Última actualización: Abril 2026</div>
+
+</div>
+
+<script>
+function switchLang(lang) {
+  document.querySelectorAll('.lang-en, .lang-es').forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll('.lang-' + lang).forEach(el => el.classList.add('visible'));
+  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.lang-btn' + (lang === 'en' ? ':first-child' : ':last-child')).classList.add('active');
+}
+</script>
+
+</body>
+</html>

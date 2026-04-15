@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENT Visit Briefing / Consulta ORL</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f8f7f5;
+    color: #2c2c2c;
+    padding: 20px;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 16px;
+  }
+  .lang-toggle {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 16px;
+  }
+  .lang-btn {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid #ddd;
+    background: #f0eeeb;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .lang-btn:first-child { border-radius: 8px 0 0 8px; }
+  .lang-btn:last-child { border-radius: 0 8px 8px 0; }
+  .lang-btn.active {
+    background: #2c2c2c;
+    color: #fff;
+    border-color: #2c2c2c;
+  }
+  .section {
+    margin-bottom: 22px;
+  }
+  .section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #b06a30;
+    margin-bottom: 8px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #e8e5e0;
+  }
+  .card p {
+    font-size: 0.92rem;
+    margin-bottom: 8px;
+  }
+  .card p:last-child { margin-bottom: 0; }
+  .highlight {
+    background: #fdf6ee;
+    border-left: 3px solid #d4882a;
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+  }
+  ul {
+    padding-left: 18px;
+    font-size: 0.92rem;
+  }
+  ul li {
+    margin-bottom: 6px;
+  }
+  .ask {
+    background: #e8f4e8;
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid #c5dfc5;
+  }
+  .ask p {
+    font-size: 0.92rem;
+    margin-bottom: 6px;
+  }
+  .ask p:last-child { margin-bottom: 0; }
+  .lang-en, .lang-es { display: none; }
+  .lang-en.visible, .lang-es.visible { display: block; }
+</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a0f0a">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(console.error);
+    });
+  }
+</script>
+</head>
+<body>
+
+<h1 class="lang-en visible">ENT Visit — Panama</h1>
+<h1 class="lang-es">Consulta ORL — Panamá</h1>
+<div class="subtitle lang-en visible">Briefing for appointment — April 2026</div>
+<div class="subtitle lang-es">Resumen para la consulta — Abril 2026</div>
+
+<div class="lang-toggle">
+  <div class="lang-btn active" onclick="switchLang('en')">English</div>
+  <div class="lang-btn" onclick="switchLang('es')">Español</div>
+</div>
+
+<!-- ==================== ENGLISH ==================== -->
+<div class="lang-en visible">
+
+<div class="section">
+  <div class="section-title">Chief Complaint</div>
+  <div class="card">
+    <p><strong>Excessive mucus production, chronic throat clearing, and coughing</strong> — occurring after nearly every meal and waking me at approximately 3:30 AM most nights with reflux, coughing, and mucus.</p>
+    <p>This has been a <strong>lifelong pattern</strong> that has significantly escalated over the past ~2 years into a nightly occurrence affecting sleep (averaging 3–4 hours).</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Suspected Diagnosis</div>
+  <div class="card">
+    <p><strong>Laryngopharyngeal Reflux (LPR)</strong> — "silent reflux" where stomach contents reach the throat and larynx, triggering mucus production as a protective response.</p>
+    <p>Symptoms are consistent with LPR rather than classic GERD: no significant heartburn, but heavy throat/airway involvement.</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Key Context — Thyroid Connection</div>
+  <div class="highlight">
+    Recently diagnosed with <strong>autoimmune thyroid condition</strong> (elevated TPO antibodies). Currently on levothyroxine, approximately 6–8 weeks into treatment. This is likely the upstream driver of the escalation:
+  </div>
+  <div class="card">
+    <ul>
+      <li><strong>Reduced gastric motility</strong> — food sits longer, more reflux opportunity</li>
+      <li><strong>Reduced esophageal motility</strong> — acid clears more slowly when it does reflux</li>
+      <li><strong>Elevated histamine reactivity</strong> — mucous membranes overreact to acid exposure</li>
+      <li><strong>Disrupted sleep architecture</strong> — less overnight tissue repair</li>
+    </ul>
+    <p style="margin-top: 10px; font-size: 0.88rem; color: #666;">The escalation from occasional flare-ups to nightly episodes correlates with the timeline of thyroid dysfunction (~2 years). Expect improvement as thyroid levels optimize.</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Current Management</div>
+  <div class="card">
+    <p><strong>Three-mechanism approach (started April 2026):</strong></p>
+    <ul>
+      <li><strong>PPI:</strong> Omeprazole 20mg — 30 min before dinner</li>
+      <li><strong>H2 blocker:</strong> Famotidine 20mg — bedtime</li>
+      <li><strong>H1 antihistamine:</strong> Cetirizine 10mg — daily</li>
+    </ul>
+    <p style="margin-top: 10px;">Also using: DAO enzyme with meals, Gaviscon as needed</p>
+    <p>Sleep position: head elevated via adjustable bed</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Other Relevant History</div>
+  <div class="card">
+    <ul>
+      <li>Known histamine sensitivity with identified food triggers</li>
+      <li>Previous visit with this ENT for travel antibiotics</li>
+      <li>Eustachian tube dysfunction / tinnitus (also likely thyroid-related)</li>
+      <li>Traveling frequently — symptoms worsen with disrupted routines</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">What I'd Like From This Visit</div>
+  <div class="ask">
+    <p><strong>1. Laryngoscopy</strong> — scope the throat and vocal cords to assess for visible signs of chronic acid exposure / LPR inflammation</p>
+    <p><strong>2. Rule out infection</strong> — recent week-long flare was severe enough to question whether there's an infectious component on top of the reflux</p>
+    <p><strong>3. Treatment guidance</strong> — is the current PPI + H2 + H1 approach appropriate, or would you adjust? Any additional interventions?</p>
+    <p><strong>4. Eustachian tube assessment</strong> — could the ETD / tinnitus be related to the same reflux or inflammatory process?</p>
+  </div>
+</div>
+
+</div>
+
+<!-- ==================== ESPAÑOL ==================== -->
+<div class="lang-es">
+
+<div class="section">
+  <div class="section-title">Motivo de Consulta</div>
+  <div class="card">
+    <p><strong>Producción excesiva de mucosidad, carraspeo crónico y tos</strong> — ocurre después de casi cada comida y me despierta aproximadamente a las 3:30 AM la mayoría de las noches con reflujo, tos y mucosidad.</p>
+    <p>Ha sido un <strong>patrón de toda la vida</strong> que se ha intensificado significativamente en los últimos ~2 años, convirtiéndose en un episodio nocturno que afecta el sueño (promedio de 3–4 horas).</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Diagnóstico Sospechado</div>
+  <div class="card">
+    <p><strong>Reflujo Laringofaríngeo (RLF)</strong> — "reflujo silencioso" en el que el contenido estomacal llega a la garganta y la laringe, provocando producción de mucosidad como respuesta protectora.</p>
+    <p>Los síntomas son consistentes con RLF y no con ERGE clásico: sin ardor significativo, pero con fuerte compromiso de garganta y vías respiratorias.</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Contexto Clave — Conexión Tiroidea</div>
+  <div class="highlight">
+    Diagnóstico reciente de <strong>condición tiroidea autoinmune</strong> (anticuerpos TPO elevados). Actualmente en tratamiento con levotiroxina, aproximadamente 6–8 semanas de tratamiento. Es probablemente el factor principal de la escalada:
+  </div>
+  <div class="card">
+    <ul>
+      <li><strong>Motilidad gástrica reducida</strong> — los alimentos permanecen más tiempo, mayor oportunidad de reflujo</li>
+      <li><strong>Motilidad esofágica reducida</strong> — el ácido se elimina más lentamente cuando hay reflujo</li>
+      <li><strong>Reactividad histamínica elevada</strong> — las membranas mucosas reaccionan exageradamente a la exposición ácida</li>
+      <li><strong>Arquitectura del sueño alterada</strong> — menor reparación tisular nocturna</li>
+    </ul>
+    <p style="margin-top: 10px; font-size: 0.88rem; color: #666;">La escalada de episodios ocasionales a episodios nocturnos se correlaciona con la línea temporal de la disfunción tiroidea (~2 años). Se espera mejoría a medida que los niveles tiroideos se optimicen.</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Manejo Actual</div>
+  <div class="card">
+    <p><strong>Enfoque de tres mecanismos (iniciado en abril 2026):</strong></p>
+    <ul>
+      <li><strong>IBP:</strong> Omeprazol 20mg — 30 min antes de la cena</li>
+      <li><strong>Bloqueador H2:</strong> Famotidina 20mg — al acostarse</li>
+      <li><strong>Antihistamínico H1:</strong> Cetirizina 10mg — diario</li>
+    </ul>
+    <p style="margin-top: 10px;">También usa: enzima DAO con las comidas, Gaviscon según necesidad</p>
+    <p>Posición para dormir: cabecera elevada con cama ajustable</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Otros Antecedentes Relevantes</div>
+  <div class="card">
+    <ul>
+      <li>Sensibilidad conocida a la histamina con desencadenantes alimentarios identificados</li>
+      <li>Consulta previa con este ORL por antibióticos para viaje</li>
+      <li>Disfunción de la trompa de Eustaquio / tinnitus (también probablemente relacionado con la tiroides)</li>
+      <li>Viaja con frecuencia — los síntomas empeoran con rutinas alteradas</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Lo Que Solicito en Esta Consulta</div>
+  <div class="ask">
+    <p><strong>1. Laringoscopia</strong> — examinar la garganta y las cuerdas vocales para evaluar signos visibles de exposición ácida crónica / inflamación por RLF</p>
+    <p><strong>2. Descartar infección</strong> — el brote reciente de una semana fue lo suficientemente severo como para cuestionar si hay un componente infeccioso además del reflujo</p>
+    <p><strong>3. Orientación sobre tratamiento</strong> — ¿es apropiado el enfoque actual de IBP + H2 + H1, o lo ajustaría? ¿Alguna intervención adicional?</p>
+    <p><strong>4. Evaluación de la trompa de Eustaquio</strong> — ¿podría la disfunción tubárica / tinnitus estar relacionado con el mismo proceso de reflujo o inflamatorio?</p>
+  </div>
+</div>
+
+</div>
+
+<script>
+function switchLang(lang) {
+  document.querySelectorAll('.lang-en, .lang-es').forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll('.lang-' + lang).forEach(el => el.classList.add('visible'));
+  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.lang-btn' + (lang === 'en' ? ':first-child' : ':last-child')).classList.add('active');
+}
+</script>
+
+</body>
+</html>
