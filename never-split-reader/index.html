@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Never Split the Difference</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Source+Sans+Pro:wght@300;400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #faf9f6; --fg: #1a1a1a; --muted: #888;
+    --accent: #2a4a6b; --accent-light: #c8b88a;
+    --card-bg: #f5f0e6;
+    --serif: 'Merriweather', Georgia, serif;
+    --sans: 'Source Sans Pro', Helvetica, sans-serif;
+  }
+  body.dark {
+    --bg: #1a1917; --fg: #d4cfc3; --muted: #777;
+    --accent: #c8b88a; --accent-light: #5c4a2a; --card-bg: #252420;
+  }
+  body.sepia {
+    --bg: #f4ecd8; --fg: #3b2f1e; --muted: #8a7a5f;
+    --accent: #2a4a6b; --accent-light: #c8b88a; --card-bg: #ebe3cc;
+  }
+
+  body {
+    font-family: var(--serif);
+    background: var(--bg); color: var(--fg);
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.3s, color 0.3s;
+  }
+  /* When JS runs, it adds .js-ready to lock viewport for pagination */
+  body.js-ready {
+    overflow: hidden; height: 100dvh; width: 100vw;
+  }
+  /* No-JS fallback: content scrolls naturally, reader chrome hidden */
+  .topbar, .progress-bar, .reader { display: none; }
+  body.js-ready .topbar, body.js-ready .progress-bar, body.js-ready .reader { display: flex; }
+  body.js-ready .reader { display: block; }
+  /* No-JS: book content is a readable scrollable page */
+  #book-content {
+    max-width: 720px; margin: 0 auto; padding: 32px 24px;
+    line-height: 1.82;
+  }
+  #book-content .section { margin-bottom: 48px; }
+  /* When JS runs, hide the static content (paginated view takes over) */
+  body.js-ready #book-content { display: none; }
+
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 44px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; background: var(--bg);
+    border-bottom: 1px solid var(--accent-light); z-index: 100;
+    font-family: var(--sans); transition: opacity 0.3s, transform 0.3s;
+  }
+  .topbar.hidden { opacity: 0; transform: translateY(-100%); pointer-events: none; }
+  .topbar .title {
+    font-size: 13px; font-weight: 600; color: var(--accent);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%;
+  }
+  .topbar .controls { display: flex; gap: 10px; align-items: center; }
+  .topbar button {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; color: var(--muted); padding: 4px;
+    font-family: var(--sans);
+  }
+  .topbar button:hover { color: var(--accent); }
+
+  .progress-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 36px;
+    display: flex; align-items: center; padding: 0 16px;
+    background: var(--bg); border-top: 1px solid var(--accent-light);
+    z-index: 100; font-family: var(--sans);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .progress-bar.hidden { opacity: 0; transform: translateY(100%); pointer-events: none; }
+  .progress-track {
+    flex: 1; height: 3px; background: var(--accent-light);
+    border-radius: 2px; margin: 0 12px; position: relative; cursor: pointer;
+  }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+  .progress-label { font-size: 11px; color: var(--muted); white-space: nowrap; min-width: 55px; }
+  .progress-label.right { text-align: right; }
+
+  .reader { position: fixed; top: 44px; bottom: 36px; left: 0; right: 0; overflow: hidden; }
+  .page-container {
+    width: 100%; height: 100%; display: flex;
+    transition: transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  .page {
+    min-width: 100%; height: 100%; padding: 28px 24px;
+    overflow: hidden; line-height: 1.82;
+  }
+
+  .tap-left, .tap-center, .tap-right {
+    position: absolute; top: 0; bottom: 0; z-index: 10;
+  }
+  .tap-left { left: 0; width: 25%; cursor: w-resize; }
+  .tap-center { left: 25%; width: 50%; cursor: pointer; }
+  .tap-right { right: 0; width: 25%; cursor: e-resize; }
+
+  h1 {
+    font-size: 1.6em; font-weight: 700; margin: 0 0 8px 0;
+    color: var(--accent); line-height: 1.3;
+  }
+  h2 {
+    font-size: 1.2em; font-weight: 700; margin: 28px 0 12px 0;
+    color: var(--accent); line-height: 1.3;
+  }
+  h3 {
+    font-size: 1.05em; font-weight: 600; margin: 20px 0 8px 0;
+    color: var(--accent);
+  }
+  p { margin: 0 0 16px 0; text-align: justify; }
+  .ch-subtitle {
+    font-family: var(--sans); font-size: 0.85em;
+    color: var(--muted); margin-bottom: 24px;
+    letter-spacing: 0.03em; text-transform: uppercase;
+  }
+
+  .pull-quote {
+    border-left: 3px solid var(--accent-light);
+    padding: 12px 20px; margin: 20px 0;
+    font-style: italic; font-size: 1.05em;
+    color: var(--accent);
+  }
+  .pull-quote .attr {
+    display: block; font-size: 0.8em;
+    font-style: normal; margin-top: 6px; color: var(--muted);
+  }
+
+  .concept-box {
+    background: var(--card-bg); border-radius: 8px;
+    padding: 16px 20px; margin: 20px 0;
+  }
+  .concept-box .cb-label {
+    font-family: var(--sans); font-weight: 700;
+    font-size: 0.85em; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .concept-box p { margin: 6px 0; text-align: left; font-size: 0.95em; }
+
+  .ornament {
+    text-align: center; color: var(--accent-light);
+    font-size: 1.2em; letter-spacing: 12px;
+    margin: 24px 0;
+  }
+
+  .application {
+    background: var(--card-bg); border-radius: 10px;
+    padding: 20px 24px; margin: 24px 0;
+    border-left: 4px solid var(--accent);
+  }
+  .application .app-header {
+    font-family: var(--sans); font-weight: 700;
+    font-size: 0.9em; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .application p { text-align: left; }
+
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 200; display: none; justify-content: center;
+    align-items: flex-start; padding-top: 60px;
+  }
+  .overlay.show { display: flex; }
+  .settings-panel, .toc-panel {
+    background: var(--bg); border-radius: 12px;
+    padding: 24px; width: 300px; max-width: 90vw;
+    max-height: 70vh; overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  .settings-panel h3, .toc-panel h3 {
+    font-family: var(--sans); font-size: 13px;
+    font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--muted);
+    margin: 16px 0 8px 0;
+  }
+  .settings-panel h3:first-child, .toc-panel h3:first-child { margin-top: 0; }
+  .settings-row {
+    display: flex; gap: 8px;
+  }
+  .settings-row button {
+    flex: 1; padding: 8px; border: 1px solid var(--accent-light);
+    border-radius: 6px; background: transparent; color: var(--fg);
+    cursor: pointer; font-family: var(--sans); font-size: 13px;
+  }
+  .settings-row button.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .font-size-row {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .font-size-row button {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--accent-light); background: transparent;
+    color: var(--fg); font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .size-label { font-family: var(--sans); font-size: 14px; color: var(--muted); }
+  .toc-panel { width: 340px; }
+  .toc-panel h3 { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 16px; }
+  .toc-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--accent-light);
+    cursor: pointer; font-family: var(--sans);
+  }
+  .toc-item:hover { color: var(--accent); }
+  .toc-item .toc-title { font-size: 14px; font-weight: 400; }
+  .toc-item .toc-page { font-size: 12px; color: var(--muted); }
+  .toc-item.current { font-weight: 600; color: var(--accent); }
+</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a0f0a">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(console.error);
+    });
+  }
+</script>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <button onclick="showTOC()" title="Table of Contents">&#9776;</button>
+  <div class="title" id="chapter-title">Never Split the Difference</div>
+  <div class="controls">
+    <button onclick="showSettings()" title="Settings">Aa</button>
+  </div>
+</div>
+
+<div class="reader" id="reader">
+  <div class="tap-left" onclick="prevPage()"></div>
+  <div class="tap-center" onclick="toggleUI()"></div>
+  <div class="tap-right" onclick="nextPage()"></div>
+  <div class="page-container" id="page-container"></div>
+</div>
+
+<div class="progress-bar" id="progressbar">
+  <span class="progress-label" id="page-num">1</span>
+  <div class="progress-track" id="progress-track" onclick="seekPage(event)">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+  <span class="progress-label right" id="page-total">1</span>
+</div>
+
+<div class="overlay" id="settings-overlay" onclick="closeOverlays(event)">
+  <div class="settings-panel" onclick="event.stopPropagation()">
+    <h3>Theme</h3>
+    <div class="settings-row">
+      <button onclick="setTheme('light')" id="theme-light">Light</button>
+      <button onclick="setTheme('sepia')" id="theme-sepia">Sepia</button>
+      <button onclick="setTheme('dark')" id="theme-dark">Dark</button>
+    </div>
+    <h3>Font Size</h3>
+    <div class="font-size-row">
+      <button onclick="changeFontSize(-1)">&#8722;</button>
+      <span class="size-label" id="font-size-label">16px</span>
+      <button onclick="changeFontSize(1)">&#43;</button>
+    </div>
+    <h3>Font</h3>
+    <div class="settings-row">
+      <button onclick="setFont('serif')" id="font-serif">Serif</button>
+      <button onclick="setFont('sans')" id="font-sans">Sans-Serif</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="toc-overlay" onclick="closeOverlays(event)">
+  <div class="toc-panel" onclick="event.stopPropagation()">
+    <h3>Contents</h3>
+    <div id="toc-list"></div>
+  </div>
+</div>
+
+<div id="book-content">
+<div class="section" data-title="Opening">
+<h1>Chapter 1: The New Rules</h1>
+<div class="ch-subtitle">Why emotion beats logic at the negotiating table</div>
+<p><strong>Chris Voss thought he was walking into a quiet academic chat at Harvard Law School. Instead, he found himself facing two of the world's most distinguished negotiation professors in an ambush role-play: a mock kidnapping where his fictional son's life hung in the balance. What happened next would upend everything the business world believed about how deals get made.</strong></p>
+<p>The professors came armed with decades of theory, prestigious degrees, and ironclad logical frameworks. Voss had something different: twenty years of talking actual terrorists and kidnappers out of killing people. When Professor Robert Mnookin growled <em>"We've got your son, Voss. Give us one million dollars or he dies,"</em> Voss didn't panic or start calculating. He smiled and asked a simple question.</p>
+<div class="pull-quote">How am I supposed to do that?<span class=attr>&mdash; Chris Voss</span></div>
+</div>
+
+<div class="section" data-title="The Wrong Game">
+<h2>Why Harvard's best kept losing</h2>
+<p>That one question—repeated in different forms—completely flummoxed two brilliant academics. Every time they made a threat or demand, Voss would respond with another version: <em>How do I know he's even alive? How can I get you any money right now?</em> Within minutes, the professors were fumbling, trying to solve <em>his</em> logistical problems instead of forcing him to meet <em>their</em> demands.</p>
+<p>A year later, Voss talked his way into Harvard's Winter Negotiation Course—144 of the country's brightest students competing in mock deals. He systematically destroyed every opponent's budget using the same approach. While they deployed sophisticated rational frameworks, he asked emotionally-loaded questions that made them negotiate against themselves.</p>
+<div class="concept-box"><div class="cb-label">Calibrated Questions</div><p><strong>What they are:</strong> Open-ended questions that start with 'How' or 'What'</p><p><strong>Why they work:</strong> Give the illusion of control while constraining options</p><p><strong>The effect:</strong> Force your counterpart to use their mental energy solving your problems</p></div>
+<p>The Harvard students were playing chess while Voss was playing poker. They assumed everyone was rational, predictable, and motivated by logical self-interest. Voss knew that humans are fundamentally emotional animals who happen to think, not thinking animals who happen to feel.</p>
+</div>
+
+<div class="section" data-title="The Science Behind the Madness">
+<h2>How behavioral economics rewrote negotiation</h2>
+<p>For decades, business schools taught negotiation as applied economics: rational actors making logical trade-offs to maximize value. Then psychologists Daniel Kahneman and Amos Tversky proved that humans aren't rational at all. We're driven by over 150 cognitive biases that distort how we see every situation.</p>
+<p>Kahneman's research revealed two systems of thinking: System 1 (fast, emotional, instinctive) and System 2 (slow, deliberate, logical). The kicker? System 1 drives System 2. Our emotional reactions create the framework for our supposedly rational decisions. If you can influence someone's feelings, you can guide their logic.</p>
+<div class="concept-box"><div class="cb-label">Tactical Empathy</div><p><strong>Core premise:</strong> People want to be understood and accepted</p><p><strong>The technique:</strong> Listen intensely to understand their emotional state</p><p><strong>The result:</strong> They become less defensive and more willing to find solutions</p></div>
+<p>This insight revolutionized FBI hostage negotiation after disasters like Waco and Ruby Ridge proved that rational problem-solving doesn't work with people in emotional crisis. The solution wasn't better logic—it was better psychology.</p>
+</div>
+
+<div class="section" data-title="Life Is Negotiation">
+<h2>Every interaction is about getting what you want</h2>
+<p>Most people think negotiation is what happens in boardrooms or car dealerships. But every human interaction where someone wants something from someone else is a negotiation. Your salary discussions, your arguments with service providers, your conversations with family—they're all negotiations that boil down to one simple, animal urge: <em>I want.</em></p>
+<p>The techniques that work on international terrorists work just as well on difficult customers, stubborn teenagers, or intransigent business partners. Because underneath all our sophisticated reasoning, we're still emotional creatures who need to feel heard and understood before we'll move toward agreement.</p>
+<p>Traditional negotiation assumes you can separate emotion from problem-solving. FBI negotiation assumes emotion <em>is</em> the problem to solve. When you make someone feel safe enough to reveal what they really need, when you demonstrate that you understand their perspective, when you show genuine empathy for their position—that's when the magic happens.</p>
+</div>
+
+<div class="section" data-title="How This Applies to You">
+<div class="ornament">&bull; &bull; &bull;</div>
+<div class="application"><div class="app-header">How This Applies to You — Donald, April 2026</div>
+<p>Your FINRA arbitration attorneys probably approach your case like those Harvard professors: armed with precedents, regulations, and logical arguments about why Schwab acted improperly. But the arbitrators are human beings with their own biases and emotional reactions to your story. Instead of just presenting facts, help your legal team understand the arbitrators' perspective. What are their concerns about ruling against a major firm? What would make them feel confident that justice is being served? Frame your case in terms of their emotional comfort zone.</p>
+<p>When you're negotiating with Tom about daily routines or medical appointments, resist the urge to logic him into compliance. His developmental delays don't make him immune to emotional needs—if anything, they make those needs more primary. Before pushing your agenda, listen for what he's really worried about. Is the new doctor scary? Does the schedule conflict with something he values? Acknowledge those feelings first: <em>'It sounds like you're concerned about...'</em> When he feels understood, he'll be far more willing to work with you on solutions.</p>
+</div>
+
+<div class="section" data-title="Opening">
+<h1>Chapter 2: Be A Mirror</h1>
+<div class="ch-subtitle">Getting People to Talk Through Mimicry and Calm</div>
+<p><strong>September 30, 1993. Two masked bank robbers storm a Chase Manhattan branch in Brooklyn, pistol-whipping a guard and putting a gun barrel in a teller's mouth. Chris Voss, barely eighteen months into hostage negotiation training, gets his first real test when his experienced partner gets stuck after five hours of back-and-forth with the lead hostage-taker, Chris Watts.</strong></p>
+<p>Everything the FBI assumed about the situation was wrong. Intelligence suggested the robbers wanted to surrender—actually a ruse. Watts claimed to have multiple international accomplices—actually just one unwitting partner. The "simple" bank robbery turned into a daylong psychological chess match, teaching Voss that <em>until you know what you're dealing with, you don't know what you're dealing with</em>.</p>
+<div class="pull-quote">We chased your driver away?<span class=attr>&mdash; Chris Voss, using his first successful mirror</span></div>
+</div>
+
+<div class="section" data-title="The Power of Voice">
+<h2>Switching from Battle Mode to Discovery Mode</h2>
+<p>When Voss took over the call, he deployed what he calls his "Late-Night FM DJ Voice"—deep, soft, slow, reassuring. This wasn't accident. Your voice is your most powerful tool in any verbal communication because it reaches into someone's brain and flips an emotional switch: distrusting to trusting, nervous to calm.</p>
+<div class="concept-box"><div class="cb-label">The Three Voices</div><p><strong>Late-Night FM DJ:</strong> Downward inflection, slow and calm. Creates authority without defensiveness. Use sparingly.</p><p><strong>Positive/Playful:</strong> Your default voice. Easygoing, encouraging. Smile while talking—even on phone.</p><p><strong>Direct/Assertive:</strong> Rarely used. Signals dominance and creates pushback.</p></div>
+<p>Most negotiators make the mistake of turning conversations into battles of arguments—two schizophrenics both listening to voices in their own heads. Instead, Voss learned to treat negotiation as a process of <strong>discovery</strong>. The goal isn't to win debates; it's to extract information and make the other person feel heard and safe enough to keep talking.</p>
+</div>
+
+<div class="section" data-title="The Mirror Technique">
+<h2>The Closest Thing to a Jedi Mind Trick</h2>
+<p>When Voss confronted Watts about a car registered to "Chris Watts," he stumbled onto something powerful. After Watts deflected, Voss tried a simple repetition: "We chased your driver away?" That mirror—repeating the last few words as a question—caused Watts to "vomit information" about an accomplice the FBI knew nothing about.</p>
+<div class="concept-box"><div class="cb-label">The Mirror Process</div><p><strong>Step 1:</strong> Repeat the last 1-3 critical words they just said</p><p><strong>Step 2:</strong> Use an upward, inquisitive inflection (not challenging)</p><p><strong>Step 3:</strong> Stay silent for at least 4 seconds</p><p><strong>Step 4:</strong> Let them elaborate (they always will)</p><p><strong>Step 5:</strong> Repeat as needed</p></div>
+<p>Mirroring works because humans fear what's different and are drawn to what's similar. By subtly imitating their words, you trigger an unconscious bonding instinct. A study of restaurant servers found that those who mirrored customers (simply repeating their orders back) earned 70% higher tips than those who used positive reinforcement like "great choice!"</p>
+</div>
+
+<div class="section" data-title="The Confrontation Formula">
+<h2>How to Disagree Without Being Disagreeable</h2>
+<p>Voss developed a systematic approach for dealing with difficult people—the type-A bulldozers who prefer dominance to collaboration. One of his students used it perfectly when her impulsive boss demanded she make "two copies of all the paperwork" from a massive consulting project.</p>
+<div class="concept-box"><div class="cb-label">The 5-Step Confrontation Sequence</div><p><strong>Step 1:</strong> Use the late-night FM DJ voice</p><p><strong>Step 2:</strong> Start with "I'm sorry..."</p><p><strong>Step 3:</strong> Mirror their key words</p><p><strong>Step 4:</strong> Silence—at least 4 seconds</p><p><strong>Step 5:</strong> Repeat until they talk themselves into a better solution</p></div>
+<p>The student mirrored: "I'm sorry, two copies?" Then: "I'm sorry, so you're saying the client is asking for a copy?" By the end, her boss had talked himself out of a week's worth of unnecessary work and settled for digital backups. The mirror forces people to clarify their thinking without feeling attacked.</p>
+</div>
+
+<div class="section" data-title="How This Applies to You">
+<div class="ornament">&bull; &bull; &bull;</div>
+<div class="application"><div class="app-header">How This Applies to You — Donald, April 2026</div>
+<p>Your FINRA arbitration is exactly the kind of high-stakes conversation where mirroring shines. When opposing counsel makes aggressive demands, resist the urge to counter-argue immediately. Instead: "So you're saying the compliance violation was intentional?" Let them elaborate—they'll often reveal weaknesses in their own position. With Schwab reps pushing back on trades, try "I'm sorry, the margin requirement changed?" in your most reasonable voice. Force them to explain their logic.</p>
+<p>The FM DJ voice works particularly well in your medical negotiations in Medellín. Colombian doctors, like most professionals, respond to calm authority. When they quote an inflated price, downward-inflect: "The consultation is $400." Not a question—a statement that conveys you're informed and unruffled. Then mirror their response. Even with Tom, when he's frustrated about routine changes, mirror his concerns back: "The schedule is different?" This validates his feelings and often gets him talking through solutions himself.</p>
+</div>
+
+<div class="section" data-title="Opening">
+<h1>Chapter 3: Don't Feel Their Pain, Label It</h1>
+<div class="ch-subtitle">Turn Emotions Into Tools</div>
+<p><strong>Twenty-seventh floor of a Harlem high-rise, 1998. Three armed fugitives barricaded inside an apartment. FBI SWAT behind Voss, snipers on rooftops. No phone number to call in. For six straight hours, he talked through the apartment door in his 'late-night FM DJ voice.'</strong></p>
+<p>Traditional negotiating wisdom says keep a poker face, don't get emotional, separate people from the problem. But what happens when emotions <em>are</em> the problem? When you're dealing with scared people holding guns? Voss learned that emotions aren't obstacles—they're the means. The relationship between negotiator and counterpart mirrors that of therapist and patient: probe, understand, reflect back, get them to go deeper.</p>
+<div class="pull-quote">We didn't want to get caught, but you calmed us down.<span class=attr>&mdash; All three fugitives after surrendering</span></div>
+</div>
+
+<div class="section" data-title="Tactical Empathy">
+<h2>Beyond Sympathy: Tactical Empathy</h2>
+<p>Through that Harlem door, Voss couldn't see the fugitives, but he could imagine their world. For hours he repeated: <em>"It looks like you don't want to come out. It seems like you worry that if you open the door, we'll come in with guns blazing. It looks like you don't want to go back to jail."</em> Not sympathy—no hugs or agreement with their values. Tactical empathy: understanding their feelings and mindset in the moment, hearing what's behind those feelings to increase influence in all future moments.</p>
+<p>Most cops couldn't articulate how they talked angry, violent people down. They'd just shrug when asked. But Voss cracked the code: they were thinking from the other person's perspective <em>while talking to them</em>, rapidly assessing what drove them. Neural resonance—when we closely observe someone's face, gestures, tone, our brains begin to align with theirs. Princeton researchers found they could predict communication quality by measuring brain alignment. Good listeners could anticipate what speakers would say before they said it.</p>
+</div>
+
+<div class="section" data-title="The Labeling System">
+<h2>Labeling: The Shortcut to Intimacy</h2>
+<p>Back to that Harlem doorway. Those fugitives didn't have to say a word—Voss knew they feared getting killed and going to jail. So he spotted their predictable emotions and very calmly repeated those feelings back to them. That's labeling: validating someone's emotion by acknowledging it. Give someone's emotion a name and you show you identify with how they feel.</p>
+<div class="concept-box"><div class="cb-label">The Labeling Framework</div><p><strong>Detect:</strong> Watch for changes in words, tone, body language when they respond to external events</p><p><strong>Label:</strong> Start with 'It seems like...' 'It sounds like...' 'It looks like...' (never 'I think...')</p><p><strong>Silence:</strong> After you label, shut up. Let them fill the void and reveal themselves</p></div>
+<p>UCLA brain imaging studies show why this works: when people see faces expressing strong emotion, the amygdala (fear center) lights up. But when asked to label that emotion—applying rational words to fear—activity shifts to areas governing rational thinking. Labeling an emotion disrupts its raw intensity. Students always worry their counterpart will explode: <em>"Don't you dare tell me how I feel!"</em> Voss's secret: people never even notice.</p>
+</div>
+
+<div class="section" data-title="The Accusation Audit">
+<h2>Get There First: The Accusation Audit</h2>
+<p>Defense lawyers know this trick—they mention every weakness in their case during opening statements, a technique called 'taking the sting out.' Voss systematized this into the accusation audit: list every terrible thing your counterpart could say about you, then say it first. His student Anna used this to save a $1 million government contract when a partnership soured.</p>
+<p>Before the crucial meeting, Anna and her partner listed every negative charge their small-business partner could level: <em>"You're the typical big contractor pushing out the small guy. You promised us work and reneged. You could have warned us weeks ago."</em> They practiced in role-plays, timing their labels and pauses like theater. When the meeting came, Anna opened by acknowledging their partner's biggest gripes before they could voice them. The result? Instead of defensive anger, her counterpart said: <em>"We don't feel like you are mistreating us. You are not the 'Big Bad Prime.'"</em></p>
+<div class="concept-box"><div class="cb-label">The Accusation Audit Process</div><p><strong>List:</strong> Write down every terrible thing they could say about you</p><p><strong>Practice:</strong> Role-play delivering these labels naturally, with proper pacing</p><p><strong>Lead:</strong> Open the conversation by naming their likely fears before they can voice them</p><p><strong>Listen:</strong> Let them add nuance and detail—that's where your power lies</p></div>
+</div>
+
+<div class="section" data-title="How This Applies to You">
+<div class="ornament">&bull; &bull; &bull;</div>
+<div class="application"><div class="app-header">How This Applies to You — Donald, April 2026</div>
+<p>Your FINRA arbitration is the perfect testing ground for labeling. Before your next call with the attorneys, do an accusation audit. List what they're thinking: <em>"It seems like you feel this guy made risky trades and won't take responsibility. It looks like you think I'm just another angry client trying to blame Schwab for my losses."</em> Get there first. When you acknowledge their likely skepticism upfront, you shift from adversary to someone who understands their position—which makes them more likely to really listen to your evidence.</p>
+<p>With Tom, try tactical empathy around his routines and changes. Instead of explaining why the doctor's appointment is necessary, start with: <em>"It seems like you're worried this new doctor won't understand you like Dr. Rodriguez does."</em> Let him elaborate. That silence after your label—as awkward as it feels—is where Tom will tell you what's really driving his resistance. And with that Colombian landlord negotiation? Open with: <em>"It looks like you're thinking all these gringos try to change everything the minute they arrive."</em> Watch how quickly the dynamic shifts when you name the elephant in the room first.</p>
+</div>
+
+<div class="section" data-title="Opening">
+<h1>Chapter 4: Beware "Yes"—Master "No"</h1>
+<div class="ch-subtitle">Why rejection is your friend and agreement is often a trap</div>
+<p><strong>Picture this: You're home before dinner when the phone rings. Telemarketer. After butchering your name, he launches into his script—a flowchart designed to funnel you toward one outcome. <em>Do you enjoy a nice glass of water from time to time? Well, yes, but... Me too. And like me I bet you like crisp, clean water with no chemical aftertaste...</em> You feel your muscles tighten. You want to scream "No!" even when the question is obviously true.</strong></p>
+<p>Voss realized something counterintuitive early in his FBI career: we've got it backward. That telemarketer's <em>yes</em> feels like a trap because it is one. Meanwhile, <em>no</em> feels like salvation because it gives you back control. For good negotiators, "No" isn't the end—it's pure gold.</p>
+<div class="pull-quote">"No" is the start of the negotiation, not the end of it.<span class=attr>&mdash; Chris Voss</span></div>
+</div>
+
+<div class="section" data-title="The Birth of a Negotiator">
+<h2>Learning "No" the hard way</h2>
+<p>Fresh off the FBI's Joint Terrorism Task Force in New York, Voss walked into Amy Bonderow's office—she ran the Crisis Negotiation Team—and announced he wanted to be a hostage negotiator.</p>
+<p>"Everyone does—got any training?" she asked.<br>"No."<br>"Any credentials?"<br>"Nope."<br>"Any experience?"<br>"No."<br>"Do you have a degree in psychology, sociology, anything related to negotiation?"<br>"No."</p>
+<p>Amy's response was swift: "Looks like you answered your own question. No. Now go away." But she threw him a lifeline—volunteer at a suicide hotline first. No guarantees.</p>
+<p>Months later at HelpLine, Voss thought he was crushing it with the frequent callers—energy vampires who'd burned through everyone else's patience. During one call with Daryl, a cab driver afraid to go outside, Voss systematically dismantled every fear until Daryl couldn't give him one reason not to step outside. Daryl even thanked him for doing "such a great job."</p>
+<p>Then came his performance review. His supervisor Jim smiled and delivered the gut punch: "That was one of the worst calls I ever heard." Daryl's "yes" and gratitude were counterfeit—designed to make Voss feel good enough to leave him alone. The whole call had been about Voss's ego, not helping Daryl own the solution.</p>
+<div class="pull-quote">"That's right."<span class=attr>&mdash; Chris Voss</span></div>
+</div>
+
+<div class="section" data-title="The Three Kinds of Yes">
+<h2>Not all agreement is created equal</h2>
+<p>There are three kinds of "Yes" in any negotiation, and only one matters. <strong>Counterfeit Yes</strong> is what Daryl gave Voss—an escape route or fishing expedition. <strong>Confirmation Yes</strong> is simple acknowledgment with no commitment to action. <strong>Commitment Yes</strong> is the real deal: agreement that leads to action, signatures, results.</p>
+<p>The problem is they all sound the same. And humans have become masters at the counterfeit yes because we're constantly being hunted for commitment. Think of every pushy salesman, every aggressive fundraiser—they've trained people to deflect with fake agreement.</p>
+<div class="concept-box"><div class="cb-label">The "No" Reframe</div><p><strong>"No" actually means:</strong> I'm not ready to agree yet</p><p><strong>Or:</strong> You're making me uncomfortable</p><p><strong>Or:</strong> I don't understand / can't afford it / want something else</p><p><strong>Or:</strong> I need more information / want to talk it over</p><p><strong>Your response:</strong> "What about this doesn't work for you?" / "What would you need to make it work?"</p></div>
+<p>When someone tells you no, they're not rejecting you—they're defining their boundaries, protecting their autonomy, and getting comfortable enough to actually listen. "No" gives people the feeling of safety and control. "Yes" makes them feel hunted.</p>
+</div>
+
+<div class="section" data-title="Tactical Applications">
+<h2>Making "No" work for you</h2>
+<p>Voss learned this from FBI colleague Marti Evelsizer, who was being removed from her position by a jealous supervisor. Instead of arguing why she deserved to keep the job, Marti opened with: "Do you want the FBI to be embarrassed?" After her supervisor said "No," she followed with: "What do you want me to do?" He leaned back, felt in control, and let her keep the position.</p>
+<p>The key insight: by pushing for "No," Marti put her supervisor in the decision-making zone where he felt safe and powerful.</p>
+<div class="concept-box"><div class="cb-label">"No"-Oriented Techniques</div><p><strong>Better opening:</strong> "Is now a bad time to talk?" vs "Do you have a few minutes?"</p><p><strong>Force engagement:</strong> Intentionally mislabel their position so they correct you</p><p><strong>Define boundaries:</strong> Ask what they would say "No" to</p><p><strong>Email magic:</strong> "Have you given up on this project?" when being ignored</p><p><strong>Warning sign:</strong> If they won't say "No" to anything, they're confused or hiding something</p></div>
+<p>A political fundraiser in Voss's class tested this principle. Traditional script: <em>Do you believe gas prices are too high? Yes. Do you believe Democrats are the problem? Yes. Do you think we need change? Yes. Can you give me your credit card?</em> Result: All yesses led to a final no.</p>
+<p>"No"-oriented version: <em>Do you feel America's best days are ahead if things stay the same? No. Are you going to sit and watch Obama take the White House without a fight? No. If you want to do something today...</em> Result: 23% better return rate. The "no" answers made donors feel in control and ready to act.</p>
+</div>
+
+<div class="section" data-title="How This Applies to You">
+<div class="ornament">&bull; &bull; &bull;</div>
+<div class="application"><div class="app-header">How This Applies to You — Donald, April 2026</div>
+<p>Your FINRA arbitration is a perfect testing ground for this principle. Instead of trying to get the arbitrators to agree with your position upfront ("Don't you think Schwab acted improperly?"), try inviting their "no" to build safety: "Are you comfortable with brokers ignoring explicit instructions from experienced traders?" Let them define what they won't accept—it's more powerful than pushing for what they will. When they correct or disagree, you've got engagement instead of politeness.</p>
+<p>This works everywhere in your expat life too. With your Colombian doctors: "Is there anything about this treatment plan that concerns you?" With visa officials: "Are there any aspects of my M-11 application that seem incomplete?" With Tom: "Is this something you don't want to talk about right now?" Each "no" gives them control while giving you real information instead of fake compliance. Remember—every "yes" might be counterfeit, but "no" always tells you where someone actually stands.</p>
+</div>
+
+<div class="section" data-title="Opening">
+<h1>Chapter 5: Trigger The Two Words That Immediately Transform Any Negotiation</h1>
+<div class="ch-subtitle">Why 'That's Right' Beats 'Yes' Every Time</div>
+<p><strong>When Abu Sayyaf terrorists grabbed American Jeff Schilling in the Philippines and demanded $10 million, FBI negotiator Chris Voss faced a four-month deadlock. The militant leader Abu Sabaya — sunglasses, bandana, ego the size of Texas — wouldn't budge from his "war damages" demands. Standard negotiation tactics hit a wall. Then Voss discovered something that changed everything: two simple words that can transform any negotiation.</strong></p>
+<p>The breakthrough didn't come from clever arguments or pressure tactics. It came from understanding a fundamental truth about human psychology: people don't change their behavior because you're right. They change when they feel truly <em>understood</em>. The goal isn't getting someone to say "yes" — it's getting them to say "that's right."</p>
+<div class="pull-quote">That's right is better than yes.<span class=attr>&mdash; Chris Voss</span></div>
+</div>
+
+<div class="section" data-title="The Behavioral Change Stairway">
+<h2>From Listening to Influence</h2>
+<p>The FBI's Crisis Negotiation Unit developed the Behavioral Change Stairway Model: five stages that move any negotiator from listening to influencing behavior. Active listening leads to empathy, which builds rapport, which creates influence, which enables behavioral change. The model traces back to psychologist Carl Rogers' concept of "unconditional positive regard" — real change only happens when people feel accepted as they are.</p>
+<p>Most of us learned early that approval comes with conditions. Say the right things, act the right way, get the love. So we hide our real thoughts and calibrate our words for approval. Which is why most conversations — even with doctors telling heart patients their lives depend on change — produce zero behavioral shift. Over 90% of heart surgery patients make no lifestyle changes two years post-operation.</p>
+<p>The key insight: if you hear "yes," you probably haven't created real change yet. You've created temporary compliance at best.</p>
+</div>
+
+<div class="section" data-title="Breaking the Deadlock">
+<h2>The Sabaya Breakthrough</h2>
+<p>After four months of Sabaya's immovable $10 million demand, Voss decided to hit the reset button. No more logical arguments about why Jeff Schilling had nothing to do with 500 years of Muslim oppression in the Philippines. Instead, he wrote a two-page script for Filipino negotiator Benjie using every active listening weapon in the arsenal.</p>
+<div class="concept-box"><div class="cb-label">The Active Listening Arsenal</div><p><strong>Effective Pauses:</strong> Use silence to drain emotion from dialogue</p><p><strong>Minimal Encouragers:</strong> "Yes," "OK," "I see" to show full attention</p><p><strong>Mirroring:</strong> Repeat back what they said instead of arguing</p><p><strong>Labeling:</strong> Name their feelings — "It sounds so unfair, I see why you're angry"</p><p><strong>Paraphrasing:</strong> Repeat their meaning in your own words</p><p><strong>Summarizing:</strong> Paraphrasing + labeling = complete acknowledgment of their world</p></div>
+<p>When Benjie followed the script — fully summarizing Sabaya's version of history and the emotions behind it — something remarkable happened. Sabaya went silent for nearly a minute. Then: "That's right." The war damages demand simply vanished. From that moment, Sabaya never mentioned money again. Schilling eventually escaped and was rescued by Philippine commandos.</p>
+<p>Two weeks later, Sabaya called Benjie: "I was going to hurt Jeffrey. I don't know what you did to keep me from doing that, but whatever it was, it worked."</p>
+</div>
+
+<div class="section" data-title="Why 'You're Right' Is Poison">
+<h2>The Difference That Changes Everything</h2>
+<p>"You're right" is the worst possible response in any negotiation. It's what you say to get someone to shut up and leave you alone. Voss learned this with his own son Brandon, a high school linebacker who kept making the same tactical mistake despite agreeing with every coaching suggestion. "You're right, Dad. You're right, Coach." Then straight back to the old behavior.</p>
+<p>The breakthrough came when Voss stopped trying to convince Brandon and instead reflected his reality: "You seem to think it's unmanly to dodge a block. You think it's cowardly to get out of someone's way that's trying to hit you." Brandon paused, then: "That's right." Once he owned the insight about what was holding him back, he changed course and became an exceptional linebacker.</p>
+<p>"That's right" means they've assessed your understanding and pronounced it correct of their own free will. They embrace it. "You're right" means they want you to go away.</p>
+</div>
+
+<div class="section" data-title="How This Applies to You">
+<div class="ornament">&bull; &bull; &bull;</div>
+<div class="application"><div class="app-header">How This Applies to You — Donald, April 2026</div>
+<p>Your FINRA arbitration isn't just about the facts of what Schwab did wrong. Those arbitrators have heard similar cases before. What you need is for them to feel that you truly understand <em>their</em> position — the regulatory pressures they face, the complexity of the modern trading environment, the challenge of balancing investor protection with market efficiency. Before you present your case, summarize their world back to them until you hear "that's right." Only then will they be mentally ready to consider your perspective on those allegedly improper margin calls.</p>
+<p>With Tom, stop trying to convince him why certain behaviors make sense. When he's resistant to a new routine or medical appointment, reflect his concerns first: "It sounds like you're worried this new doctor won't understand you the way Dr. Martinez does. You've built a relationship there, and starting over feels scary." Wait for his "that's right" before discussing why the change might help. The same principle works with that landlord in Medellín — acknowledge his concerns about American tenants and payment reliability before negotiating lease terms.</p>
+</div>
+
+<div class="section" data-title="Opening">
+<h1>Chapter 6: Bend Their Reality</h1>
+<div class="ch-subtitle">Using psychology to reshape what your counterpart values</div>
+<p><strong>When kidnappers in Port-au-Prince demanded $150,000 for a politician's aunt, the nephew's instinct was simple: pay up and get her back. Classic compromise thinking. But Voss had spotted something the family missed—these weren't political terrorists with grand schemes. They were weekend party thugs who needed beer money by Friday.</strong></p>
+<p>This insight shifted everything. Not the facts—a woman was still kidnapped, the threat was still real. But the <em>frame</em> around those facts changed completely. Instead of desperate criminals holding out for life-changing money, these were small-time operators with a self-imposed deadline and modest actual needs.</p>
+<p>Same situation, totally different negotiating reality.</p>
+<div class="pull-quote">No deal is better than a bad deal.<span class=attr>&mdash; Chris Voss</span></div>
+</div>
+
+<div class="section" data-title="Why Compromise Fails">
+<h2>The Split-the-Difference Trap</h2>
+<p>Here's Voss's favorite analogy: A wife wants her husband to wear black shoes with his suit. He wants brown. They compromise and he wears one black shoe, one brown shoe. Is this the best outcome? It's the <em>worst</em> possible outcome. Either choice would be better than this compromise.</p>
+<p>We compromise not because it's effective, but because it feels safe and saves face. Most negotiators are driven by fear of conflict rather than by their actual goals. But creative solutions require risk, confusion, even annoyance. That's where leverage lives.</p>
+<p>In that Haitian kidnapping, by understanding the kidnappers' real timeline and motivation, the family paid $4,751 plus a portable CD player instead of $150,000. The aunt came home safely six hours later.</p>
+</div>
+
+<div class="section" data-title="The Power of "Fair"">
+<h2>The Most Dangerous Word in Negotiation</h2>
+<p>Voss calls "fair" the F-bomb of negotiation. Humans are wired to reject unfairness even when it costs them. In his classroom exercise—the Ultimatum Game—students consistently refuse free money if the split feels insulting. Robin Williams did voice work on <em>Aladdin</em> for $75,000 instead of his usual $8 million rate, then went ballistic when the film made $504 million. It wasn't about the money—it was about perceived unfairness.</p>
+<div class="concept-box"><div class="cb-label">Three Ways People Use 'Fair'</div><p><strong>Defensive:</strong> "We just want what's fair" — makes you feel accused and triggers concessions</p><p><strong>Aggressive:</strong> "We've given you a fair offer" — implies you're too dense to recognize fairness</p><p><strong>Constructive:</strong> "I want you to feel treated fairly at all times. Stop me if you don't" — sets honest expectations</p></div>
+<p>When someone drops the fair bomb on you, don't reflexively concede. Instead, mirror back: "Fair?" Then add a label: "It seems like you're ready to provide the evidence that supports that."</p>
+</div>
+
+<div class="section" data-title="Reality-Bending Techniques">
+<h2>Six Tools for Reshaping Perception</h2>
+<p>Once you understand that all decisions are emotional—even when people think they're being rational—you can use predictable psychological patterns to your advantage.</p>
+<div class="concept-box"><div class="cb-label">The Reality-Bending Toolkit</div><p><strong>Anchor their emotions:</strong> Start with an accusation audit to set low expectations</p><p><strong>Let them go first:</strong> Unless you're certain of market value, let them name numbers</p><p><strong>Use ranges:</strong> "At places like X, people get $130k-170k" sounds less aggressive than "I want $150k"</p><p><strong>Pivot to non-monetary terms:</strong> Find things that cost them little but matter to you</p><p><strong>Use odd numbers:</strong> $37,263 feels calculated and serious; $40,000 feels negotiable</p><p><strong>Gift surprises:</strong> Unexpected concessions trigger reciprocity</p></div>
+<p>When Voss had to cut contractors from $2,000 to $500 per day, he started with brutal honesty: "By the time we hang up, you're going to think I'm a lousy businessman who can't budget or plan." Then: "Still, I wanted to bring this to you before I took it to someone else." Suddenly they weren't losing $1,500—they were avoiding losing $500 to some other contractor. Every single one took the deal.</p>
+</div>
+
+<div class="section" data-title="How This Applies to You">
+<div class="ornament">&bull; &bull; &bull;</div>
+<div class="application"><div class="app-header">How This Applies to You — Donald, April 2026</div>
+<p>Your FINRA arbitration is a perfect reality-bending scenario. Instead of letting Schwab frame this as "Donald made risky trades and lost money," anchor their emotions first: "You're probably thinking I'm just another bitter client who can't accept losses, that I should have read the fine print, that this is really about my own trading decisions." Then pivot: "Still, let's look at what the compliance records actually show about when those margin calls were processed." You've shifted from defending your trading to examining their procedures.</p>
+<p>With Tom, remember that fairness cuts both ways. When he says "that's not fair" about his routines or responsibilities, don't automatically adjust. Mirror it back: "Not fair?" and see what he's really concerned about. Often it's not the task itself but feeling unheard. And when negotiating with Colombian doctors or your Medellín landlord, use ranges based on local research: "I understand specialists here typically charge between X and Y." It positions you as informed while giving them room to feel reasonable at the lower end.</p>
+</div>
+
+<div class="section" data-title="Opening">
+<h1>Chapter 7: Create The Illusion Of Control</h1>
+<div class="ch-subtitle">Use calibrated questions to make them solve your problems</div>
+<p><strong>The Dos Palmas kidnapping in the Philippines was the biggest failure of Chris Voss's FBI career. Twenty hostages taken by Abu Sayyaf terrorists, including three Americans. A year of botched raids, turf wars between agencies, and paralyzed negotiations that ended with the hostages dead from friendly fire. But from this disaster, Voss learned the most important lesson of his negotiating life.</strong></p>
+<p>The problem wasn't just the chaos—it was the FBI's entire approach. They treated every conversation like a wrestling match, trying to exhaust opponents into submission. They were afraid to ask for things because it might put them in "debt" to kidnappers. They used rigid proof-of-life questions that sounded like law enforcement coaching. Everything was a showdown, and showdowns don't work.</p>
+<div class="pull-quote">The secret to gaining the upper hand is giving the other side the illusion of control<span class=attr>&mdash; Chris Voss</span></div>
+</div>
+
+<div class="section" data-title="The Breakthrough">
+<h2>How a drug dealer cracked the code</h2>
+<p>While Voss was still processing the Philippines failure, FBI Pittsburgh sent over tapes from a kidnapping case—as a joke. A drug dealer's girlfriend had been kidnapped by a rival dealer, and he'd come to the FBI for help. On the tapes, you can hear this untrained dealer negotiating with the kidnapper. Instead of asking the bulletproof questions the FBI taught ("What was her teddy bear's name?"), he just blurted: <em>"Hey, dog, how do I know she's all right?"</em></p>
+<p>The kidnapper went silent for ten seconds. Then, in a much softer tone: "Well, I'll put her on the phone." The guy <em>volunteered</em> to provide proof of life. He thought it was his idea. That's when Voss had his breakthrough moment—this unsophisticated dealer had just pulled off something the FBI couldn't do with all their training.</p>
+<p>The difference was the question itself. Instead of a closed-ended demand with one right answer, the dealer asked an open-ended question that forced the kidnapper to pause and think about <em>how to solve the problem</em>. It didn't trigger reciprocity because the kidnapper offered the solution himself. The genius was giving the kidnapper the illusion of control while actually steering him exactly where the dealer wanted to go.</p>
+</div>
+
+<div class="section" data-title="Calibrated Questions">
+<h2>The mechanics of "How" and "What"</h2>
+<p>This became Voss's signature tool: the calibrated question. These aren't random inquiries—they're precisely engineered to remove aggression from confrontations while nudging your counterpart toward solving your problems. Think of them as listener's judo, using the other person's energy to get what you want.</p>
+<div class="concept-box"><div class="cb-label">Calibrated Question Rules</div><p><strong>Start with "How" or "What":</strong> These words inspire expansive thinking</p><p><strong>Avoid closed-ended words:</strong> Never use "can," "is," "are," "do," or "does"</p><p><strong>Rarely use "Why":</strong> It sounds accusatory in any language</p><p><strong>Imply you need their help:</strong> This triggers goodwill and reduces defensiveness</p><p><strong>Target a specific outcome:</strong> Design questions that guide them toward your solution</p></div>
+<p>A few years later, Voss consulted with a PR firm owner whose corporate client owed her money but kept promising future work instead of payment. She was terrified to confront them. His advice was simple: summarize the situation, then ask <em>"How am I supposed to do that?"</em> When she finally tried it, the client immediately apologized, explained their internal problems, and paid within 48 hours.</p>
+<div class="concept-box"><div class="cb-label">Greatest Hits: Universal Calibrated Questions</div><p><strong>"How am I supposed to do that?"</strong> — The nuclear option for impossible requests</p><p><strong>"What about this is important to you?"</strong> — Uncovers their real priorities</p><p><strong>"How can we solve this problem?"</strong> — Makes them your partner</p><p><strong>"What is the biggest challenge you face?"</strong> — Opens up their world</p><p><strong>"How would you like me to proceed?"</strong> — Gives them control while you frame options</p></div>
+</div>
+
+<div class="section" data-title="Don't Lose Your Cool">
+<h2>When emotional regulation fails, everything fails</h2>
+<p>Voss had the perfect script for a marketing strategist dealing with a chauvinist CEO who was stiffing her on a $7,000 bill. The plan hit every technique: "No"-oriented questions, labeling, calibrated questions, the works. It had a 90% success rate when negotiators stayed calm. She didn't. When the CEO called back within ten minutes, her anger flared at his patronizing voice. The conversation became a showdown. She got nothing.</p>
+<p>The lesson: bite your tongue. When verbally attacked, don't counterattack—ask a calibrated question. The Japanese figured this out long ago, using translators even when they understand English perfectly, because it forces them to step back and think. When people feel out of control, they adopt a hostage mentality, becoming defensive or lashing out. Your job is to lower that hostage mentality, not inflame it.</p>
+</div>
+
+<div class="section" data-title="How This Applies to You">
+<div class="ornament">&bull; &bull; &bull;</div>
+<div class="application"><div class="app-header">How This Applies to You — Donald, April 2026</div>
+<p>Your FINRA arbitration is the perfect laboratory for calibrated questions. When the opposing counsel makes an aggressive move, resist the urge to fire back with facts and righteous indignation. Instead, try: "What outcome are we both trying to achieve here?" or "How do you see this working for your client long-term?" You'll be amazed how often they start solving your problem by talking themselves into a more reasonable position. The same applies with Schwab when they change platform rules or fee structures—"How am I supposed to manage my positions under this new system?" puts the burden on them to either fix it or explain why their change makes sense.</p>
+<p>With Tom, calibrated questions can transform those repetitive conversations where he's fixated on something that isn't going to happen. Instead of "No, we can't do that" (which triggers his defensive patterns), try "What would need to be different for that to work?" or "How do you think we should handle the part about...?" You're not giving in—you're letting him think through the obstacles himself, which often leads to him finding the solution you wanted anyway.</p>
+</div>
+
+<div class="section" data-title="Opening">
+<h1>Chapter 8: Guarantee Execution</h1>
+<div class="ch-subtitle">"Yes" Is Nothing Without "How"</div>
+<p><strong>During a chaotic prison siege in Louisiana, inmates with makeshift knives held the warden hostage. The negotiators crafted an elegant surrender ritual: inmates would walk out one by one, past three police perimeters, then radio back from the paddy wagon to confirm they weren't beaten. The plan worked perfectly—until some SWAT guy confiscated the first inmate's walkie-talkie. "What the hell are you doing with that?" Suddenly the remaining hostage-takers were screaming about cutting off fingers, convinced their buddy was getting his ass kicked.</strong></p>
+<p>This near-disaster taught Voss a crucial lesson: getting agreement isn't enough. You have to architect the entire implementation. Success isn't when someone says "Yes, we have a deal"—it's when the deal actually happens and stays done.</p>
+<div class="pull-quote">"Yes" is nothing without "How."<span class=attr>&mdash; Chris Voss</span></div>
+</div>
+
+<div class="section" data-title="The "How" Question Arsenal">
+<h2>Calibrated Questions as Gentle Warfare</h2>
+<p>When José, an American guide, was kidnapped in Ecuador for $5 million, Voss deployed a radical new strategy. Instead of negotiating normally, his team coached José's wife Julie to respond to every demand with a calibrated question: "How do I know José is alive?" "We don't have that kind of money. How can we raise that much?" "How can we pay you anything until we know José is okay?"</p>
+<p>The kidnapper grew perplexed by Julie's persistent questions, constantly asking for time to think. This bought precious time—and drove the ransom from $5 million down to $16,500. More importantly, the delays forced other guerrillas to peel off, leaving José with a single teenage guard. During a rainstorm, he escaped through a window and made it home.</p>
+<div class="concept-box"><div class="cb-label">The "How" Question Toolkit</div><p><strong>"How am I supposed to do that?"</strong> — Your primary "No" without saying "No"</p><p><strong>"How will we know we're on track?"</strong> — Forces them to define success in their words</p><p><strong>"How will we address things if we find we're off track?"</strong> — Makes them own the implementation</p><p><strong>"How does this affect everybody else?"</strong> — Uncovers hidden stakeholders</p></div>
+<p>The genius of "How" questions is <em>forced empathy</em>. They make your counterpart take a hard look at your situation while giving them the illusion of control. When people think the solution is their idea, they'll work harder to make it succeed.</p>
+</div>
+
+<div class="section" data-title="Reading the Room (and the Liars)">
+<h2>The 7-38-55 Rule and Other Detection Tools</h2>
+<p>UCLA's Albert Mehrabian found that only 7% of communication is words, 38% is tone, and 55% is body language. For negotiators, this means watching for misalignment. When someone says "Yes..." but their voice hesitates, that's your cue to label: "I heard you say 'Yes,' but it seemed like there was hesitation in your voice."</p>
+<div class="concept-box"><div class="cb-label">Spotting Deception & Measuring Authority</div><p><strong>The Pinocchio Effect:</strong> Liars use more words, more third-person pronouns ("they," "them"), more complex sentences</p><p><strong>Pronoun Power:</strong> Lots of "I," "me," "my" = low authority. Hard to get first-person pronouns = real decision maker</p><p><strong>The Rule of Three:</strong> Get agreement three times in different ways—it's hard to fake conviction repeatedly</p></div>
+<p>When Voss was negotiating for kidnapped Alastair in the Philippines, the cabbie-kidnapper used "we" and "they" so consistently that Voss knew he was dealing with the real boss. Conversely, decision makers often defer to "the people away from the table" to avoid getting cornered.</p>
+</div>
+
+<div class="section" data-title="The Multi-Step "No" and Getting Your Price">
+<h2>Making Them Bid Against Themselves</h2>
+<p>You can say "No" four times before actually using the word. Voss's student Jesus used this perfectly when his brother Joaquin needed to buy out a business partner. The partner's representative started at €30,812. Through a series of empathetic "No" responses—"The price you offered is very fair, and I certainly wish that I could afford it... I am very sorry, but wish you the best of luck"—they got the price down to €23,567.</p>
+<div class="concept-box"><div class="cb-label">The Four-Step "No" Sequence</div><p><strong>Step 1:</strong> "How am I supposed to do that?" (delivered deferentially)</p><p><strong>Step 2:</strong> "Your offer is very generous, I'm sorry, that just doesn't work for me"</p><p><strong>Step 3:</strong> "I'm sorry but I'm afraid I just can't do that"</p><p><strong>Step 4:</strong> "I'm sorry, no" (gentle, downward inflection)</p></div>
+<p>The key is staying focused through the end. Don't think about catching the last flight home or getting to the golf course. When you're close to a deal, that's when mental discipline matters most. Voss also discovered the power of using your own name—"What's the Chris discount?"—to humanize yourself and trigger empathy.</p>
+</div>
+
+<div class="section" data-title="How This Applies to You">
+<div class="ornament">&bull; &bull; &bull;</div>
+<div class="application"><div class="app-header">How This Applies to You — Donald, April 2026</div>
+<p>Your FINRA arbitration is the perfect laboratory for these tools. When their attorneys propose a settlement that's insulting, don't counteroffer immediately. Instead: "How am I supposed to accept that when Schwab's own records show the unsuitable recommendations?" Let them solve your problem. Then test their commitment with the Rule of Three—get them to reaffirm their revised offer through different approaches. Watch for pronoun usage: if the opposing counsel keeps saying "my client believes" rather than "we believe," you're probably not talking to the real decision maker.</p>
+<p>With your Colombian doctors, the "How" questions become even more valuable because of the cultural politeness factor. "How can we make sure Tom gets the continuity of care he needs?" sounds collaborative, not demanding. And when dealing with your landlord about that lease renewal, remember the 7-38-55 rule—if his words say "no problem" but his tone suggests irritation, there's something underneath. Label it: "It sounds like there might be some concern about the rental market changes." You'll get to the real issue faster than arguing about square footage or amenities.</p>
+</div>
+
+<div class="section" data-title="Opening">
+<h1>Chapter 9: Bargain Hard</h1>
+<div class="ch-subtitle">Bare-Knuckle Tactics When Nice Runs Out</div>
+<p><strong>When Voss fell in love with a Salsa Red Pearl Toyota 4Runner, he discovered every negotiator's dilemma: wanting something badly while needing to extract maximum value. The D.C. dealer knew he had the only truck in that color for hundreds of miles. Voss knew he was walking into the lions' den with his wallet showing.</strong></p>
+<p>What followed was a masterclass in psychological pressure. Starting at $36,000, the salesman dropped to $34,000, then $32,500—even pushing over a paper that said "YOU WIN" in big letters with smiley faces. But Voss held his ground with empathetic deflection: <em>"I'm sorry, this is really embarrassing. I simply can't."</em> Each time, silence. Each time, the salesman trudged back to his manager. When the dust settled, Voss drove off with his dream truck for exactly his target price: $30,000.</p>
+<div class="pull-quote">You don't rise to the occasion; you fall to your highest level of preparation.<span class=attr>&mdash; Chris Voss</span></div>
+</div>
+
+<div class="section" data-title="Know Your Counterpart's Style">
+<h2>The Three Types of Negotiators</h2>
+<p>Most people stumble into bargaining assuming their counterpart thinks like they do. This "I am normal" paradox kills deals before they start. There's a 66% chance the person across from you operates from a completely different playbook. Voss's team identified three core types:</p>
+<div class="concept-box"><div class="cb-label">The Three Negotiator Types</div><p><strong>Analysts:</strong> Methodical, hate surprises, need data. Time = preparation. Silence = thinking time. Use facts, warn of problems early.</p><p><strong>Accommodators:</strong> Relationship-focused, want win-win outcomes. Time = relationship building. Silence = anger. Get them talking implementation.</p><p><strong>Assertive:</strong> Direct, results-driven, must be heard first. Time = money. Silence = opportunity to speak. Use mirrors and "that's right" moments.</p></div>
+<p>The revelation came when Voss's employee spent an hour "agreeing" with everything he said—turns out he was just mirroring Voss's assertive style back at him. Once you identify someone's type, you can speak their psychological language instead of projecting your own "normal" onto them.</p>
+</div>
+
+<div class="section" data-title="Taking the First Punch">
+<h2>When They Hit You With Extreme Anchors</h2>
+<p>Experienced negotiators often open with ridiculous offers—extreme anchors designed to trigger your fight-or-flight response and push you straight to your maximum. As Tyson said, "Everybody has a plan until they get punched in the mouth." The key is preparing to absorb that punch and counter intelligently.</p>
+<div class="concept-box"><div class="cb-label">Deflecting Extreme Anchors</div><p><strong>Deflect with questions:</strong> "How am I supposed to accept that?" or "What are we trying to accomplish here?"</p><p><strong>Pivot to terms:</strong> "Let's put price aside and talk about what would make this work."</p><p><strong>Reference high comparisons:</strong> "Well, Harvard Business School charges $2,500 per day..."</p></div>
+<p>A Georgetown student facing a dean who offered only $300 for a $600 alumni event used this perfectly. Instead of folding, he acknowledged her limits but countered with $1,000—an extreme anchor that immediately shifted her to $500. Through patient back-and-forth, he landed $750 for an event that needed $737.50. The punch woke her up; his preparation closed the deal.</p>
+</div>
+
+<div class="section" data-title="The Ackerman System">
+<h2>A Systematic Approach to Haggling</h2>
+<p>From an ex-CIA kidnapping consultant, Voss learned a haggling method that incorporates psychological tactics without requiring you to think about them in the moment. The beauty is its systematic approach to what most people handle emotionally.</p>
+<div class="concept-box"><div class="cb-label">The Ackerman Bargaining Method</div><p><strong>Step 1:</strong> Set your target price (your actual goal)</p><p><strong>Step 2:</strong> Open at 65% of your target</p><p><strong>Step 3:</strong> Plan increases to 85%, 95%, then 100% of target</p><p><strong>Step 4:</strong> Use empathy and calibrated questions between offers</p><p><strong>Step 5:</strong> Make final offer precise and non-round ($37,893 vs $38,000)</p><p><strong>Step 6:</strong> Add a small non-monetary item to show you're tapped out</p></div>
+<p>The decreasing increments convince your counterpart they're squeezing every last drop from you, even when you end up exactly where you planned. Voss used this in Haiti kidnappings—aiming for under $5,000 when market rates ran $15,000-$75,000. In one case that had FBI headquarters laughing, he closed a deal at exactly $4,751. That precise $1 makes all the psychological difference.</p>
+</div>
+
+<div class="section" data-title="How This Applies to You">
+<div class="ornament">&bull; &bull; &bull;</div>
+<div class="application"><div class="app-header">How This Applies to You — Donald, April 2026</div>
+<p>Your FINRA arbitration is exactly the kind of bare-knuckle situation Voss describes. When opposing counsel opens with an extreme anchor—say, demanding you accept a settlement that barely covers your legal fees—recognize it as psychological warfare, not a rational starting point. Deflect with calibrated questions: "How am I supposed to rebuild my portfolio with that amount?" Then pivot to the broader terms that matter: "Let's put the dollar figure aside and talk about what would make this a fair resolution for both sides."</p>
+<p>The Ackerman system works whether you're negotiating with Schwab over execution quality or working out Tom's care arrangements with new providers in Fort Myers. Set your real target, open at 65%, and plan your incremental moves. When that Medellín specialist quotes $8,000 for Tom's evaluation, you're not haggling randomly—you have a systematic approach that respects their expertise while protecting your position. The precise final numbers ($4,750 instead of $5,000) signal you've done your homework and hit your genuine limit.</p>
+</div>
+
+<div class="section" data-title="Opening">
+<h1>Chapter 10: Find The Black Swan</h1>
+<div class="ch-subtitle">Uncover the Unknown Unknowns That Transform Any Deal</div>
+<p><strong>At 11:30 a.m. on June 17, 1981, William Griffin walked downstairs and murdered his mother and a handyman, then jogged to a Rochester bank where he took nine hostages. For three hours he shot at police and bystanders. At 2:30 p.m., he delivered an ultimatum: meet him in the parking lot for a shootout at 3 p.m., or he'd start killing hostages.</strong></p>
+<p>Every FBI expert knew this was standard hostage-taker theater. Nobody kills hostages on deadline. That was the permanent, inalterable truth. Until exactly 3 p.m., when Griffin shot twenty-nine-year-old Margaret Moore through the glass doors, nearly cutting her in half. The unthinkable had happened because law enforcement missed the Black Swans—the hidden pieces of information that would have revealed Griffin's true agenda: suicide by cop.</p>
+<div class="pull-quote">What we don't know can kill us or our deals.<span class=attr>&mdash; Chris Voss</span></div>
+</div>
+
+<div class="section" data-title="The Three Types of Leverage">
+<h2>Black Swans Are Leverage Multipliers</h2>
+<p>Black Swans—those unknown unknowns that change everything—are powerful because they create leverage. And there are exactly three types you need to master. <strong>Positive leverage</strong> is your ability to give them what they want. When someone says "I want to buy your business," you suddenly hold the cards. <strong>Negative leverage</strong> is your ability to make them suffer, but use it carefully—threats can poison negotiations. <strong>Normative leverage</strong> uses their own moral framework against them. Nobody wants to look like a hypocrite.</p>
+<div class="concept-box"><div class="cb-label">The Three Leverages</div><p><strong>Positive:</strong> You can provide or withhold what they want</p><p><strong>Negative:</strong> You can inflict pain (use sparingly—label it, don't threaten)</p><p><strong>Normative:</strong> Point out inconsistencies with their stated beliefs</p></div>
+<p>Voss deployed all three during a 2003 standoff when tobacco farmer Dwight Watson drove his tractor into a D.C. pond and threatened to blow up the National Mall. Watson wanted attention (positive), feared death (negative), but most importantly lived by military honor codes. When an FBI agent realized Watson was a devout Christian, they told him the next morning was "the Dawn of the Third Day"—when Christ rose from the tomb. Watson surrendered immediately, honoring both his military and religious frameworks.</p>
+</div>
+
+<div class="section" data-title="Know Their Religion">
+<h2>Understand Their Worldview to Unlock Influence</h2>
+<p>"Religion" here means whatever authority system guides your counterpart's decisions—whether that's actual faith, market principles, family honor, or corporate culture. When you speak their language back to them, you gain instant credibility. Voss once closed a deal with a Christian CEO who kept agonizing over his advisors. The moment Voss said, "This is really stewardship for you, isn't it?" the CEO lit up: "Yes! You're the only one who understands." Deal done.</p>
+<p>People also trust those they perceive as similar. When someone displays attitudes or beliefs that mirror our own, we instinctively grant them more influence. It's primal—we trust our in-group. Use this by mirroring their language, values, and frameworks back to them.</p>
+<div class="concept-box"><div class="cb-label">The Religion Framework</div><p><strong>Listen for their authority system:</strong> What guides their decisions?</p><p><strong>Mirror their language:</strong> Use their terminology and frameworks</p><p><strong>Show understanding:</strong> Demonstrate you "get" their worldview</p><p><strong>Invoke shared identity:</strong> Find common ground to trigger trust</p></div>
+</div>
+
+<div class="section" data-title="When They Seem Crazy">
+<h2>Irrational Behavior Signals Hidden Black Swans</h2>
+<p>The moment you want to throw up your hands and declare "They're crazy!" is often when the biggest Black Swans reveal themselves. People aren't irrational—they're operating on information you don't have. Three common causes: they're <em>ill-informed</em> (garbage in, garbage out), they're <em>constrained</em> by factors they won't reveal, or they have <em>hidden interests</em> you haven't uncovered.</p>
+<p>One of Voss's students was negotiating for a Charleston property listed at $4.3 million. The broker kept emphasizing what a "cash cow" it was—100% occupied, near a growing university. That made no sense. Why sell a perfect investment? The student used a label: "If he's selling such a cash cow, it seems like the seller must have doubts about future market fundamentals." The broker corrected him: "Well, the seller has some tougher properties in Atlanta and Savannah, so he has to get out of this property to pay back the other mortgages." Bingo—a financial constraint Black Swan. The student got the property for $3.6 million.</p>
+<div class="concept-box"><div class="cb-label">When It Doesn't Make Sense</div><p><strong>Don't assume crazy:</strong> Look for missing information</p><p><strong>Probe constraints:</strong> What can't they do that they won't admit?</p><p><strong>Find hidden interests:</strong> What do they really want beyond the obvious?</p><p><strong>Get face time:</strong> Email hides too much—meet in person</p></div>
+</div>
+
+<div class="section" data-title="How This Applies to You">
+<div class="ornament">&bull; &bull; &bull;</div>
+<div class="application"><div class="app-header">How This Applies to You — Donald, April 2026</div>
+<p>Your FINRA arbitration is a perfect Black Swan hunting ground. Your attorneys see a standard securities dispute, but what unknown unknowns might shift the entire case? Maybe the compliance officer has a personal grudge against aggressive traders. Maybe Schwab's regional manager is under internal pressure about options volume metrics. When their legal team acts "irrationally" rigid on settlement talks, don't assume crazy—assume hidden constraints. Are they operating under a corporate policy you haven't uncovered? Is there a regulatory deadline driving their timeline that they won't reveal?</p>
+<p>In your medical negotiations in Medellín, that specialist who keeps deflecting your questions about pricing isn't being evasive—he's operating within a system you don't understand. His "religion" might be Colombian medical hierarchy, insurance relationships, or even family obligations. Instead of pushing harder on price, try: "It seems like there are factors beyond the procedure itself that affect your availability." Let him correct you and reveal the real constraints. The moment you understand his worldview, you'll find the leverage that gets you both the care Tom needs and the respect you deserve as a patient advocate.</p>
+</div>
+</div>
+
+<script>
+const STORAGE_KEY = 'reader_never_split';
+let pages = [];
+let currentPage = 0;
+let totalPages = 0;
+let uiVisible = true;
+let fontSize = 16;
+let theme = 'light';
+let fontFamily = 'serif';
+let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+
+function paginate() {
+  const reader = document.getElementById('reader');
+  const container = document.getElementById('page-container');
+  const content = document.getElementById('book-content');
+  const sections = content.querySelectorAll('.section');
+  const readerHeight = reader.clientHeight - 56;
+  const readerWidth = reader.clientWidth - 48;
+  pages = [];
+  const measurer = document.createElement('div');
+  measurer.style.cssText = 'position:absolute;visibility:hidden;width:'+readerWidth+'px;font-family:'+(fontFamily==='serif'?'var(--serif)':'var(--sans)')+';font-size:'+fontSize+'px;line-height:1.82;padding:0;';
+  document.body.appendChild(measurer);
+  sections.forEach(function(section) {
+    const sectionTitle = section.dataset.title || '';
+    const children = Array.from(section.children);
+    let currentPageContent = '';
+    let currentPageHeight = 0;
+    children.forEach(function(child) {
+      const clone = child.cloneNode(true);
+      measurer.innerHTML = '';
+      measurer.appendChild(clone);
+      const childHeight = measurer.scrollHeight;
+      if (currentPageHeight + childHeight > readerHeight && currentPageContent) {
+        pages.push({ html: currentPageContent, title: sectionTitle });
+        currentPageContent = '';
+        currentPageHeight = 0;
+      }
+      if (childHeight > readerHeight && !currentPageContent) {
+        pages.push({ html: child.outerHTML, title: sectionTitle });
+        return;
+      }
+      currentPageContent += child.outerHTML;
+      currentPageHeight += childHeight;
+    });
+    if (currentPageContent) {
+      pages.push({ html: currentPageContent, title: sectionTitle });
+    }
+  });
+  document.body.removeChild(measurer);
+  totalPages = pages.length;
+  container.innerHTML = '';
+  pages.forEach(function(p) {
+    const pageEl = document.createElement('div');
+    pageEl.className = 'page';
+    pageEl.style.fontFamily = fontFamily === 'serif' ? 'var(--serif)' : 'var(--sans)';
+    pageEl.style.fontSize = fontSize + 'px';
+    pageEl.innerHTML = p.html;
+    container.appendChild(pageEl);
+  });
+  updatePageDisplay();
+}
+
+function updatePageDisplay() {
+  const container = document.getElementById('page-container');
+  container.style.transform = 'translateX(-' + (currentPage * 100) + '%)';
+  document.getElementById('page-num').textContent = (currentPage + 1);
+  document.getElementById('page-total').textContent = 'of ' + totalPages;
+  document.getElementById('progress-fill').style.width = (((currentPage+1)/totalPages)*100) + '%';
+  if (pages[currentPage]) {
+    document.getElementById('chapter-title').textContent = pages[currentPage].title || 'Reading';
+  }
+  savePosition();
+}
+
+function nextPage() { if (currentPage < totalPages-1) { currentPage++; updatePageDisplay(); } }
+function prevPage() { if (currentPage > 0) { currentPage--; updatePageDisplay(); } }
+function goToPage(n) { currentPage = Math.max(0, Math.min(n, totalPages-1)); updatePageDisplay(); closeOverlays(); }
+function seekPage(e) {
+  const track = document.getElementById('progress-track');
+  const rect = track.getBoundingClientRect();
+  goToPage(Math.floor(((e.clientX-rect.left)/rect.width)*totalPages));
+}
+
+function handleTouchStart(e) { touchStartX=e.touches[0].clientX; touchStartY=e.touches[0].clientY; touchStartTime=Date.now(); }
+function handleTouchEnd(e) {
+  const dx=e.changedTouches[0].clientX-touchStartX;
+  const dy=e.changedTouches[0].clientY-touchStartY;
+  const dt=Date.now()-touchStartTime;
+  if (Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5 && dt<500) {
+    if (dx<0) nextPage(); else prevPage(); e.preventDefault();
+  }
+}
+function handleKeydown(e) {
+  if (e.key==='ArrowRight'||e.key===' ') { nextPage(); e.preventDefault(); }
+  if (e.key==='ArrowLeft') { prevPage(); e.preventDefault(); }
+  if (e.key==='Escape') closeOverlays();
+}
+
+function toggleUI() {
+  uiVisible=!uiVisible;
+  document.getElementById('topbar').classList.toggle('hidden',!uiVisible);
+  document.getElementById('progressbar').classList.toggle('hidden',!uiVisible);
+}
+
+function showSettings() { document.getElementById('settings-overlay').classList.add('show'); updateSettingsUI(); }
+function showTOC() {
+  const tocList=document.getElementById('toc-list'); tocList.innerHTML=''; let lastTitle='';
+  pages.forEach(function(p,i) {
+    if (p.title!==lastTitle) {
+      const item=document.createElement('div');
+      item.className='toc-item'+(i<=currentPage?' current':'');
+      item.innerHTML='<span class="toc-title">'+p.title+'</span><span class="toc-page">p. '+(i+1)+'</span>';
+      item.onclick=function(){ goToPage(i); };
+      tocList.appendChild(item); lastTitle=p.title;
+    }
+  });
+  document.getElementById('toc-overlay').classList.add('show');
+}
+function closeOverlays(e) {
+  if (e && e.target!==e.currentTarget) return;
+  document.getElementById('settings-overlay').classList.remove('show');
+  document.getElementById('toc-overlay').classList.remove('show');
+}
+
+function setTheme(t) { theme=t; document.body.className=t==='light'?'':t; updateSettingsUI(); savePrefs(); }
+function setFont(f) {
+  fontFamily=f; const sp=currentPage; paginate();
+  currentPage=Math.min(sp,totalPages-1); updatePageDisplay(); updateSettingsUI(); savePrefs();
+}
+function changeFontSize(delta) {
+  fontSize=Math.max(12,Math.min(24,fontSize+delta));
+  document.getElementById('font-size-label').textContent=fontSize+'px';
+  const sp=currentPage; paginate(); currentPage=Math.min(sp,totalPages-1); updatePageDisplay(); savePrefs();
+}
+function updateSettingsUI() {
+  ['light','sepia','dark'].forEach(function(t){ document.getElementById('theme-'+t).classList.toggle('active',theme===t); });
+  ['serif','sans'].forEach(function(f){ document.getElementById('font-'+f).classList.toggle('active',fontFamily===f); });
+  document.getElementById('font-size-label').textContent=fontSize+'px';
+}
+
+function savePosition() { try { var d=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); d.page=currentPage; d.timestamp=Date.now(); localStorage.setItem(STORAGE_KEY,JSON.stringify(d)); } catch(e){} }
+function savePrefs() { try { var d=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); d.fontSize=fontSize; d.theme=theme; d.fontFamily=fontFamily; localStorage.setItem(STORAGE_KEY,JSON.stringify(d)); } catch(e){} }
+function loadSaved() {
+  try {
+    var d=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+    if (d.fontSize) fontSize=d.fontSize;
+    if (d.theme) { theme=d.theme; document.body.className=theme==='light'?'':theme; }
+    if (d.fontFamily) fontFamily=d.fontFamily;
+    if (typeof d.page==='number') currentPage=d.page;
+  } catch(e){}
+}
+
+function init() {
+  document.body.classList.add('js-ready');
+  loadSaved(); paginate();
+  currentPage=Math.min(currentPage,totalPages-1); updatePageDisplay();
+  var reader=document.getElementById('reader');
+  reader.addEventListener('touchstart',handleTouchStart,{passive:true});
+  reader.addEventListener('touchend',handleTouchEnd,{passive:false});
+  document.addEventListener('keydown',handleKeydown);
+  var resizeTimer;
+  window.addEventListener('resize',function(){
+    clearTimeout(resizeTimer);
+    resizeTimer=setTimeout(function(){ var sp=currentPage; paginate(); currentPage=Math.min(sp,totalPages-1); updatePageDisplay(); },300);
+  });
+}
+init();
+</script>
+</body>
+</html>
